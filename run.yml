@@ -41,6 +41,10 @@
       tags:
         - dns
 
+    - role: freshrss
+      tags:
+        - freshrss
+
     - role: authelia
       tags:
         - authelia
