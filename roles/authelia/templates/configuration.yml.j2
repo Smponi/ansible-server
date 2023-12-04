@@ -22,12 +22,23 @@ totp:
 authentication_backend:
   file:
     path: /config/users_database.yml
+    password:
+      algorithm: argon2id
+      iterations: 1
+      key_length: 32
+      salt_length: 16
+      memory: 1024
+      parallelism: 4 
 
 access_control:
   default_policy: deny
   rules:
     - domain: {{ authelia_host }}
       policy: bypass
+    - domain: {{ vaultwarden_host }}
+      policy: bypass
+    - domain: {{ rss_host }}
+      policy: two_factor
     - domain: {{ wireguard_host }}
       policy: two_factor
 {% if enable_adguard_unbound_doh %}

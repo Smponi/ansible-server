@@ -30,6 +30,10 @@ all:
 
     wireguard_host: "wg.{{ root_host }}"
 
+    rss_host: "rss.{{ root_host }}"
+
+    vaultwarden_host: "pw.{{ root_host }}"
+
     wireguard_subnet: "10.8.0.x"
 
     wireguard_client_allowed_ips: "0.0.0.0/0, ::/0"
@@ -57,7 +61,7 @@ all:
     docker_dir: "/opt/docker"
 
     # You can set it to a different port in order to avoid automated scanner bots
-    ssh_port: 22
+    ssh_port: 469
 
     # Optional e-mail for notifications (unattended upgrades, banned IPs, etc.)
     # Leave everything in place if you don't want any notifications
