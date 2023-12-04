@@ -127,12 +127,12 @@ elif [[ "$os" == "centos" ]]; then
 fi
 
 # Clone the Ansible playbook
-if [ -d "$HOME/ansible-easy-vpn" ]; then
-  pushd $HOME/ansible-easy-vpn
+if [ -d "$HOME/ansible-server" ]; then
+  pushd $HOME/ansible-server
   git pull
   popd
 else
-  git clone https://github.com/notthebee/ansible-easy-vpn $HOME/ansible-easy-vpn
+  git clone https://github.com/Smponi/ansible-server $HOME/ansible-server
 fi
 
 # Set up a Python venv
@@ -143,17 +143,17 @@ else
   PYTHON=$(which python3)
 fi
 set -e
-cd $HOME/ansible-easy-vpn
-[ -d $HOME/ansible-easy-vpn/.venv ] || $PYTHON -m venv .venv
-export VIRTUAL_ENV="$HOME/ansible-easy-vpn/.venv"
-export PATH="$HOME/ansible-easy-vpn/.venv/bin:$PATH"
+cd $HOME/ansible-server
+[ -d $HOME/ansible-server/.venv ] || $PYTHON -m venv .venv
+export VIRTUAL_ENV="$HOME/ansible-server/.venv"
+export PATH="$HOME/ansible-server/.venv/bin:$PATH"
 .venv/bin/python3 -m pip install --upgrade pip
 .venv/bin/python3 -m pip install -r requirements.txt
 
 
 
 # Install the Galaxy requirements
-cd $HOME/ansible-easy-vpn && ansible-galaxy install --force -r requirements.yml
+cd $HOME/ansible-server && ansible-galaxy install --force -r requirements.yml
 
 # Check if we're running on an AWS EC2 instance
 set +e
@@ -166,9 +166,9 @@ else
 fi
 set -e
 
-touch $HOME/ansible-easy-vpn/custom.yml
+touch $HOME/ansible-server/custom.yml
 
-custom_filled=$(awk -v RS="" '/username/&&/dns_nameservers/&&/root_host/{print FILENAME}' $HOME/ansible-easy-vpn/custom.yml)
+custom_filled=$(awk -v RS="" '/username/&&/dns_nameservers/&&/root_host/{print FILENAME}' $HOME/ansible-server/custom.yml)
 
 if [[ "$custom_filled" =~ "custom.yml" ]]; then
   clear
@@ -177,12 +177,12 @@ if [[ "$custom_filled" =~ "custom.yml" ]]; then
   echo "If you want to change something (e.g. username, domain name, etc.)"
   echo "Please edit custom.yml or secret.yml manually, and then re-run this script"
   echo
-  cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass run.yml
+  cd $HOME/ansible-server && ansible-playbook --ask-vault-pass run.yml
   exit 0
 fi
 
 clear
-echo "Welcome to ansible-easy-vpn!"
+echo "Welcome to ansible-server!"
 echo
 echo "This script is interactive"
 echo "If you prefer to fill in the custom.yml file manually,"
@@ -196,7 +196,7 @@ until [[ "$username" =~ ^[a-z0-9]*$ ]]; do
   read -p "Username: " username
 done
 
-echo "username: \"${username}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "username: \"${username}\"" >> $HOME/ansible-server/custom.yml
 
 echo
 echo "Enter your user password"
@@ -230,7 +230,7 @@ until [[ "$adguard_enable" =~ ^[yYnN]*$ ]]; do
   read -p "[y/N]: " adguard_enable
 done
 if [[ "$adguard_enable" =~ ^[yY]$ ]]; then
-  echo "enable_adguard_unbound_doh: true" >> $HOME/ansible-easy-vpn/custom.yml
+  echo "enable_adguard_unbound_doh: true" >> $HOME/ansible-server/custom.yml
 fi
 
 echo
@@ -275,7 +275,7 @@ else
 fi
 echo "OK"
 
-echo "root_host: \"${root_host}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "root_host: \"${root_host}\"" >> $HOME/ansible-server/custom.yml
 
 echo "What's your preferred DNS?"
 echo
@@ -307,7 +307,7 @@ else
     esac
 fi
 
-echo "dns_nameservers: \"${dns_nameservers}\"" >> $HOME/ansible-easy-vpn/custom.yml
+echo "dns_nameservers: \"${dns_nameservers}\"" >> $HOME/ansible-server/custom.yml
 
 if [[ ! $AWS_EC2 =~ true ]]; then
   echo
@@ -319,13 +319,13 @@ if [[ ! $AWS_EC2 =~ true ]]; then
           echo "$new_ssh_key_pair: invalid selection."
           read -p "[y/N]: " new_ssh_key_pair
   done
-  echo "enable_ssh_keygen: true" >> $HOME/ansible-easy-vpn/custom.yml
+  echo "enable_ssh_keygen: true" >> $HOME/ansible-server/custom.yml
 
   if [[ "$new_ssh_key_pair" =~ ^[yY]$ ]]; then
     echo
     read -p "Please enter your SSH public key: " ssh_key_pair
 
-    echo "ssh_public_key: \"${ssh_key_pair}\"" >> $HOME/ansible-easy-vpn/custom.yml
+    echo "ssh_public_key: \"${ssh_key_pair}\"" >> $HOME/ansible-server/custom.yml
   fi
 fi
 
@@ -366,45 +366,45 @@ if [[ "$email_setup" =~ ^[yY]$ ]]; then
   echo
   read -p "'From' e-mail [${email_login}]: " email
   if [ ! -z ${email} ]; then
-    echo "email: \"${email}\"" >> $HOME/ansible-easy-vpn/custom.yml
+    echo "email: \"${email}\"" >> $HOME/ansible-server/custom.yml
   fi
 
   read -p "'To' e-mail [${email_login}]: " email_recipient
   if [ ! -z ${email_recipient} ]; then
-    echo "email_recipient: \"${email_recipient}\"" >> $HOME/ansible-easy-vpn/custom.yml
+    echo "email_recipient: \"${email_recipient}\"" >> $HOME/ansible-server/custom.yml
   fi
 
 
 
-  echo "email_smtp_host: \"${email_smtp_host}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  echo "email_smtp_port: \"${email_smtp_port}\"" >> $HOME/ansible-easy-vpn/custom.yml
-  echo "email_login: \"${email_login}\"" >> $HOME/ansible-easy-vpn/custom.yml
+  echo "email_smtp_host: \"${email_smtp_host}\"" >> $HOME/ansible-server/custom.yml
+  echo "email_smtp_port: \"${email_smtp_port}\"" >> $HOME/ansible-server/custom.yml
+  echo "email_login: \"${email_login}\"" >> $HOME/ansible-server/custom.yml
 fi
 
 
 # Set secure permissions for the Vault file
-touch $HOME/ansible-easy-vpn/secret.yml
-chmod 600 $HOME/ansible-easy-vpn/secret.yml
+touch $HOME/ansible-server/secret.yml
+chmod 600 $HOME/ansible-server/secret.yml
 
 if [ -z ${email_password+x} ]; then
   echo
 else 
-  echo "email_password: \"${email_password}\"" >> $HOME/ansible-easy-vpn/secret.yml
+  echo "email_password: \"${email_password}\"" >> $HOME/ansible-server/secret.yml
 fi
 
-echo "user_password: \"${user_password}\"" >> $HOME/ansible-easy-vpn/secret.yml
+echo "user_password: \"${user_password}\"" >> $HOME/ansible-server/secret.yml
 
 jwt_secret=$(openssl rand -hex 23)
 session_secret=$(openssl rand -hex 23)
 storage_encryption_key=$(openssl rand -hex 23)
 
-echo "jwt_secret: ${jwt_secret}" >> $HOME/ansible-easy-vpn/secret.yml
-echo "session_secret: ${session_secret}" >> $HOME/ansible-easy-vpn/secret.yml
-echo "storage_encryption_key: ${storage_encryption_key}" >> $HOME/ansible-easy-vpn/secret.yml
+echo "jwt_secret: ${jwt_secret}" >> $HOME/ansible-server/secret.yml
+echo "session_secret: ${session_secret}" >> $HOME/ansible-server/secret.yml
+echo "storage_encryption_key: ${storage_encryption_key}" >> $HOME/ansible-server/secret.yml
 
 echo
 echo "Encrypting the variables"
-ansible-vault encrypt $HOME/ansible-easy-vpn/secret.yml
+ansible-vault encrypt $HOME/ansible-server/secret.yml
 
 echo
 echo "Success!"
@@ -418,12 +418,12 @@ if [[ "$launch_playbook" =~ ^[yY]$ ]]; then
   if [[ $EUID -ne 0 ]]; then
     echo
     echo "Please enter your current sudo password now"
-    cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass -K run.yml
+    cd $HOME/ansible-server && ansible-playbook --ask-vault-pass -K run.yml
   else
-    cd $HOME/ansible-easy-vpn && ansible-playbook --ask-vault-pass run.yml
+    cd $HOME/ansible-server && ansible-playbook --ask-vault-pass run.yml
   fi
 else
   echo "You can run the playbook by executing the bootstrap script again:"
-  echo "cd ~/ansible-easy-vpn && bash bootstrap.sh"
+  echo "cd ~/ansible-server && bash bootstrap.sh"
   exit
 fi
