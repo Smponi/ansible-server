@@ -17,11 +17,7 @@
     volumes:
         - "{{ docker_dir }}/data:/config"
     ports:
-        - "5432:80"
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+        - "5432:8080"
     networks:
       - name: wg_network
         ipv4_address: 10.8.2.6
