@@ -13,37 +13,20 @@
   until: freshrss_result is succeeded
   community.general.docker_container:
     name: "freshrss"
-    image: "freshrss/freshrss:{{ freshrss_version }}"
+    image: "lscr.io/linuxserver:{{ freshrss_version }}"
     healthcheck:
         test: ["CMD", "curl", "-f", "http://localhost:5432"]
         start_period: 10s
     pull: yes
     state: "started"
     volumes:
-        - "{{ docker_dir }}/data:/var/www/FreshRSS/data"
-        - "{{ docker_dir }}/extensions:/var/www/FreshRSS/extensions"
-        - "{{ docker_dir }}/config.custom.php:/var/www/FreshRSS/data/config.custom.php"
-        - "{{ docker_dir }}/config-user.custom.php:/var/www/FreshRSS/data/config-user.custom.php"
+        - "{{ docker_dir }}/data:/config"
     ports:
         - "5432:80"
     environment:
-        TZ: Europe/Paris
-        CRON_MIN: '2,32'
-        FRESHRSS_ENV: development
-        LISTEN: 0.0.0.0:80
-        TRUSTED_PROXY: 172.16.0.1/12 192.168.0.1/16
-        OIDC_ENABLED: "0"
-        FRESHRSS_INSTALL: |
-          --api_enabled
-          --base_url ${BASE_URL}
-          --db-type sqlite
-          --default_user admin
-          --language en
-        FRESHRSS_USER: |
-          --api_password niceTry
-          --language en
-          --password niceTry
-          --user admin
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     networks:
       - name: wg_network
         ipv4_address: 10.8.2.6
