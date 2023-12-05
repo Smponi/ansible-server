@@ -14,9 +14,6 @@
   community.general.docker_container:
     name: "freshrss"
     image: "lscr.io/linuxserver:{{ freshrss_version }}"
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:5432"]
-        start_period: 10s
     pull: yes
     state: "started"
     volumes:
